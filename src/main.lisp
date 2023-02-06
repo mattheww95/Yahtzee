@@ -33,5 +33,15 @@
   "Roll the selected dice that the user wishes to change"
   (dolist (temp args) (setf (cdr (assoc temp *dice*)) (get-random-value +dice-sides+))))
 
+(defun print-dice (dice)
+  "Print a dice value"
+  (format t " Dice ~a: ~a~&" (car dice) (cdr dice)))
 
 (format t "~a~&" (roll-select-dice 1 2 3 4 5 6))
+
+(defun print-all-dice ()
+  "Print all of the dice"
+  (format t "Current Dice:~&")
+  (mapcar #'print-dice *dice*))
+
+(print-all-dice)
