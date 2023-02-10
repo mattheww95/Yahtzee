@@ -1,21 +1,22 @@
+(ql:quickload :cl-ppcre)
 (defpackage yahtzee
-  (:use :cl))
+  (:use :cl :cl-ppcre))
 (in-package :yahtzee)
 
 (defconstant +dice-sides+ 6 "The number of sides for the dice to be rolled")
-(defparameter *dice* `((1 . nil) (2 . nil) (3 . nil) (4 . nil) (5 . nil) (6 . nil)))
-(defparameter *score* `((Aces . 0)
-                        (Twos . 0)
-                        (Threes . 0)
-                        (Fours . 0)
-                        (Sixes . 0)
-                        (Three-of-a-kind . 0)
-                        (Four-of-a-kind . 0)
-                        (Full-House . 0)
-                        (Small-Straight . 0)
-                        (Large-Straight . 0)
-                        (Yahtzee . 0)
-                        (Chance . 0)))
+(defparameter *dice* `((1 . nil) (2 . nil) (3 . nil) (4 . nil) (5 . nil)))
+(defparameter *score* `(("ACES" . 0)
+                        ("TWO" . 0)
+                        ("THREES" . 0)
+                        ("FOURS" . 0)
+                        ("SIXES" . 0)
+                        ("THREE-OF-A-KIND" . 0)
+                        ("FOUR-OF-A-KIND" . 0)
+                        ("FULL-HOUSE" . 0)
+                        ("SMALL-STRAIGHT" . 0)
+                        ("LARGE-STRAIGHT" . 0)
+                        ("YAHTZEE" . 0)
+                        ("CHANCE" . 0)))
 
 (defvar *players* () "Store each of the players")
 (defvar *number-players* 0)
@@ -76,6 +77,12 @@
   (setf *players* (cons (cons *number-players* (create-player)) *players*)))
 
 ;; Creating a players first move
+;; Breakdown of logic,
+;; need to initialize rolls
+;; ask if they want to claim on of the game conditions
+;; either update their score or roll again
+;; ask if the want to claim one of the game conditions or roll again
+;; roll again, force to claim one of the conditinos or pass
 (defun player-turn (player)
   "Get a player and begin their turn"
   (let ((p (assoc player *players*))
@@ -84,13 +91,41 @@
       (print-all-dice)
       (apply #'roll-select-dice vals)
       (print-all-dice))))
+
+(defun pprint-list (list-player)
+  "Print a list of the yahtzee outputs"
+  (if list-player
+      (progn
+        (format t "~a: ~a ~&" (car (car list-player)) (cdr (car list-player)))
+        (pprint-list (cdr list-player)))))
+
+(defun pprint-player (player)
+  "Pretty print the players current score"
+  (let ((score (cdr player)))
+    (pprint-list score)))
+
+(defun game-condition-update (condition player dice)
+  "Select the condition to be updated with the dice score"
+  (let* ((value (string-upcase condition))
+         (val-update (assoc value (car player))))
+    (if val-update
+        (setf (assoc value (car player)) (sum dice))
+        (print "Did not deal with incorrect inputs yet, tehe"))))
+
+
 ;; Need to collect user input in a turn
-    
+(defun user-loop (player)
+  "Ask which dice to roll or to claim a game condition"
+  (format t "Enter dice you wish to roll again or the game condition you wish to play~&")
+  (pprint-player player)
+  (let* ((input (read-line)) (text (cl-ppcre:split " " input :with-registers-p t)))
+    (print text)))
+
 
 (player-turn 1)
 (print *players*)
 (add-player)
 
-(print ())
+(user-loop (assoc 1 *players*))
 (setf *players* ())
 (setf *number-players* 0)
